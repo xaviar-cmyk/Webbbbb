@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ditungguin 🐼</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{height:100%; overflow:hidden;}
+  body{
+    font-family:'Roboto', sans-serif;
+    background:#000;
+    color:#fff;
+    position:relative;
+    width:100%;
+    height:100vh;
+  }
+  .screen{
+    position:absolute; inset:0;
+    opacity:0; pointer-events:none;
+    transition:opacity .5s ease, transform .5s ease;
+  }
+  .screen.active{ opacity:1; pointer-events:auto; }
+
+  /* ================= WHATSAPP SCREEN ================= */
+  #wa{
+    background:#0B141A;
+    display:flex;
+    flex-direction:column;
+    transform:translateY(0);
+  }
+  #wa.leaving{ transform:translateY(-6%); opacity:0; }
+  .wa-top{
+    background:#1F2C34;
+    padding:10px 14px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  .wa-back{ font-size:1.2rem; opacity:.85; }
+  .wa-avatar{
+    width:34px; height:34px; border-radius:50%;
+    background:#3A4A52;
+    display:flex; align-items:center; justify-content:center;
+    font-size:1rem;
+  }
+  .wa-name{ font-weight:500; font-size:1.02rem; flex:1; }
+  .wa-icons{ display:flex; gap:16px; font-size:1.1rem; opacity:.85; }
+
+  .wa-body{
+    flex:1;
+    background-color:#0B141A;
+    background-image:
+      radial-gradient(rgba(255,255,255,0.025) 1px, transparent 1px);
+    background-size:22px 22px;
+    padding:14px 12px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .wa-daychip{
+    align-self:center;
+    background:#182229;
+    color:rgba(255,255,255,0.6);
+    font-size:.72rem;
+    padding:4px 12px;
+    border-radius:8px;
+    margin-bottom:4px;
+  }
+  .wa-encrypt{
+    align-self:center;
+    background:#182229;
+    color:#F2C744;
+    font-size:.72rem;
+    line-height:1.5;
+    padding:8px 14px;
+    border-radius:8px;
+    text-align:center;
+    max-width:88%;
+  }
+  .wa-bubble-wrap{
+    align-self:flex-end;
+    display:flex;
+    flex-direction:column;
+    align-items:flex-end;
+    opacity:0;
+    transform:translateY(8px);
+    transition:opacity .35s ease, transform .35s ease;
+  }
+  .wa-bubble-wrap.show{ opacity:1; transform:translateY(0); }
+  .wa-bubble{
+    background:#025C4C;
+    color:#fff;
+    padding:8px 12px 6px;
+    border-radius:10px 2px 10px 10px;
+    font-size:.95rem;
+    max-width:78vw;
+    display:flex;
+    align-items:flex-end;
+    gap:6px;
+  }
+  .wa-time{ font-size:.65rem; color:rgba(255,255,255,0.6); }
+
+  .wa-inputbar{
+    background:#1F2C34;
+    padding:10px 12px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .wa-input{
+    flex:1;
+    background:#2A3942;
+    border-radius:24px;
+    padding:9px 14px;
+    color:#fff;
+    font-size:.92rem;
+    display:flex;
+    align-items:center;
+  }
+  .wa-cursor{
+    display:inline-block; width:2px; height:14px; background:#8FA8B3;
+    margin-left:2px; animation:blink .9s steps(1) infinite;
+  }
+  .wa-send{
+    width:38px; height:38px; border-radius:50%;
+    background:#00A884;
+    display:flex; align-items:center; justify-content:center;
+    font-size:1rem;
+  }
+  @keyframes blink{ 50%{ opacity:0; } }
+
+  /* ================= BROWSER / PANDA SCREEN ================= */
+  #browser{
+    background:
+      radial-gradient(ellipse at 20% 15%, rgba(255,255,255,0.10), transparent 40%),
+      radial-gradient(ellipse at 80% 75%, rgba(60,90,140,0.35), transparent 55%),
+      linear-gradient(180deg, #0B1220 0%, #132038 55%, #0A1830 100%);
+    display:flex;
+    flex-direction:column;
+    transform:scale(0.97);
+  }
+  #browser.active{ transform:scale(1); }
+  .browser-top{
+    background:#111318;
+    padding:10px 14px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-size:.95rem;
+  }
+  .browser-url{
+    flex:1;
+    background:#22262E;
+    border-radius:20px;
+    padding:8px 14px;
+    color:#ddd;
+    font-size:.85rem;
+  }
+  .browser-icons{ display:flex; gap:14px; opacity:.8; font-size:.95rem; }
+
+  .stage{
+    flex:1;
+    position:relative;
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .glow{ position:absolute; border-radius:50%; filter:blur(60px); opacity:0.35; pointer-events:none; }
+  .glow.g1{ width:340px; height:220px; background:#4A6FA5; top:8%; left:-8%; }
+  .glow.g2{ width:260px; height:260px; background:#7FA8D9; bottom:5%; right:-10%; opacity:0.25;}
+  .rings span{
+    position:absolute; border:1.5px solid rgba(255,255,255,0.35);
+    border-radius:50%; animation:drift linear infinite;
+  }
+  @keyframes drift{
+    0%{ transform:translateY(0) translateX(0); opacity:0;}
+    8%{opacity:0.6;} 92%{opacity:0.5;}
+    100%{ transform:translateY(-115vh) translateX(15px); opacity:0;}
+  }
+  .dots span{
+    position:absolute; width:7px; height:7px;
+    background:#FFB3C1; border-radius:50%;
+    box-shadow:0 0 8px rgba(255,150,170,0.7);
+    animation:drift linear infinite;
+  }
+
+  .cardwrap{ position:relative; z-index:5; text-align:center; padding:0 30px; }
+
+  .avatar{
+    width:130px; height:130px;
+    margin:0 auto 22px;
+    border-radius:50%;
+    background:#4A5C7A;
+    border:4px solid #fff;
+    box-shadow:0 8px 22px rgba(0,0,0,0.35);
+    position:relative;
+    display:flex; align-items:center; justify-content:center;
+    animation:bob 3s ease-in-out infinite;
+  }
+  @keyframes bob{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-6px); } }
+
+  .bubble{
+    position:absolute; top:-24px; left:50%; transform:translateX(-50%);
+    background:rgba(255,255,255,0.92);
+    color:#2A1620;
+    font-size:.7rem; font-weight:700;
+    padding:3px 9px;
+    border-radius:10px;
+    opacity:0;
+    white-space:nowrap;
+    transition:opacity .3s ease;
+  }
+  .avatar.talk .bubble{ opacity:1; }
+
+  .panda{ position:relative; width:78px; height:70px; }
+  .panda .ear{ position:absolute; top:-12px; width:26px; height:26px; background:#20222B; border-radius:50%; }
+  .panda .ear.l{ left:-4px; } .panda .ear.r{ right:-4px; }
+  .panda .face{ position:absolute; inset:0; top:2px; background:#fff; border-radius:50%; }
+  .panda .eye{ position:absolute; top:26px; width:7px; height:10px; background:#20222B; border-radius:50%; }
+  .panda .eye.l{ left:20px; } .panda .eye.r{ right:20px; }
+  .panda .blush{ position:absolute; top:36px; width:14px; height:9px; background:#FFB3C1; border-radius:50%; opacity:0.85; }
+  .panda .blush.l{ left:4px; } .panda .blush.r{ right:4px; }
+  .panda .mouth{
+    position:absolute; top:39px; left:50%; transform:translateX(-50%);
+    width:11px; height:6px; border-bottom:2.5px solid #20222B; border-radius:0 0 10px 10px;
+  }
+  .panda .paw{
+    position:absolute; top:40px; width:16px; height:16px;
+    background:#fff; border:2px solid #20222B; border-radius:50%;
+    opacity:0; transition:opacity .3s ease;
+  }
+  .panda .paw.l{ left:2px; } .panda .paw.r{ right:2px; }
+  .panda.squish .paw{ opacity:1; }
+  .panda.squish .eye{ height:3px; top:28px; border-radius:2px; }
+  .panda.squish .mouth{ width:8px; height:8px; border:2px solid #20222B; border-top:none; border-radius:0 0 8px 8px; }
+
+  .panda.shy .paw.r{ opacity:1; top:30px; right:-4px; }
+  .panda.shy .eye{ height:3px; top:28px; border-radius:2px 2px 2px 2px/6px 6px 0 0; }
+
+  .buddy{
+    position:absolute; left:-18px; bottom:2px; width:46px; height:46px;
+    background:#D9A876; border-radius:50%; border:2px solid #20222B;
+    opacity:0; transition:opacity .3s ease;
+  }
+  .buddy .e{ position:absolute; top:17px; width:5px; height:6px; background:#20222B; border-radius:50%; }
+  .buddy .e.l{ left:11px; } .buddy .e.r{ right:11px; }
+  .avatar.duo .buddy{ opacity:1; }
+  .avatar.duo .panda{ transform:translateX(8px); }
+
+  .msg{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:700; font-size:1.35rem; line-height:1.5; min-height:1.4em;
+    text-shadow:0 2px 6px rgba(0,0,0,0.5);
+  }
+  .msg .cursor{ display:inline-block; width:3px; background:#fff; margin-left:2px; animation:blink 0.9s steps(1) infinite; }
+  .sub{
+    font-family:'Baloo 2', sans-serif;
+    margin-top:10px; font-weight:600; font-size:1.15rem; color:#FFB3C1;
+    min-height:1.4em; line-height:1.5;
+    text-shadow:0 2px 6px rgba(0,0,0,0.5);
+  }
+
+  .dotsnav{ display:flex; gap:6px; margin-top:26px; justify-content:center; }
+  .dotsnav span{
+    width:6px; height:6px; border-radius:50%;
+    background:rgba(255,255,255,0.3);
+    transition:background .3s ease, transform .3s ease;
+  }
+  .dotsnav span.active{ background:#FF7A93; transform:scale(1.3); }
+
+  .endscreen{
+    position:absolute; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    opacity:0; pointer-events:none;
+    transition:opacity 1s ease;
+    z-index:10; text-align:center; flex-direction:column; gap:14px;
+  }
+  .endscreen.show{ opacity:1; pointer-events:auto; }
+  .endscreen .heart{ font-size:2.2rem; }
+  .endscreen p{ color:rgba(255,255,255,0.7); font-weight:600; font-size:.95rem; font-family:'Baloo 2', sans-serif;}
+  .replay{
+    border:none; background:#FF7A93; color:#fff;
+    font-family:'Baloo 2', sans-serif; font-weight:700;
+    padding:11px 28px; border-radius:999px; cursor:pointer;
+    box-shadow:0 10px 24px rgba(255,122,147,0.4);
+  }
+</style>
+</head>
+<body>
+
+<!-- BROWSER / PANDA SCREEN -->
+<div class="screen active" id="browser">
+  <div class="stage">
+    <div class="glow g1"></div>
+    <div class="glow g2"></div>
+    <div class="rings" id="rings"></div>
+    <div class="dots" id="dots"></div>
+
+    <div class="cardwrap">
+      <div class="avatar" id="avatar">
+        <div class="bubble" id="bubble">哈!</div>
+        <div class="buddy" id="buddy"><div class="e l"></div><div class="e r"></div></div>
+        <div class="panda" id="panda">
+          <div class="ear l"></div><div class="ear r"></div>
+          <div class="face"></div>
+          <div class="eye l"></div><div class="eye r"></div>
+          <div class="blush l"></div><div class="blush r"></div>
+          <div class="mouth"></div>
+          <div class="paw l"></div><div class="paw r"></div>
+        </div>
+      </div>
+      <div class="msg" id="msg1"><span></span></div>
+      <div class="sub" id="msg2"></div>
+      <div class="dotsnav" id="dotsnav"></div>
+    </div>
+
+    <div class="endscreen" id="endscreen">
+      <div class="heart">💗</div>
+      <p>sampai jumpa lagi~</p>
+      <button class="replay" id="replayBtn">Putar Ulang</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  window.addEventListener('load', () => {
+    startPandaSequence();
+  });
+
+  /* ---------- Panda sequence ---------- */
+  const rings = document.getElementById('rings');
+  for(let i=0;i<7;i++){
+    const s = document.createElement('span');
+    const size = 40 + Math.random()*70;
+    s.style.width = size+'px'; s.style.height = size+'px';
+    s.style.left = Math.random()*90 + '%';
+    s.style.animationDuration = (10 + Math.random()*10) + 's';
+    s.style.animationDelay = (Math.random()*10) + 's';
+    rings.appendChild(s);
+  }
+  const dots = document.getElementById('dots');
+  for(let i=0;i<14;i++){
+    const s = document.createElement('span');
+    s.style.left = Math.random()*100 + '%';
+    s.style.animationDuration = (6 + Math.random()*8) + 's';
+    s.style.animationDelay = (Math.random()*8) + 's';
+    dots.appendChild(s);
+  }
+
+  function typeCursor(inner, text, speed, onDone){
+    inner.style.opacity = 0;
+    inner.textContent = text;
+    requestAnimationFrame(() => {
+      inner.style.transition = 'opacity .35s ease';
+      inner.style.opacity = 1;
+    });
+    setTimeout(() => { if(onDone) onDone(); }, 380);
+  }
+
+  const slides = [
+    { line1:'Ada Tiga Cara Untuk Menjadi Cantik.. 🤔', line2:'', pose:'normal', pause:2000 },
+    { line1:'Kok Ditungguin? 🥹', line2:'', pose:'shy', pause:2000 },
+    { line1:'Kan Kamu Udah Cantik 😆', line2:'', pose:'duo', pause:2200 },
+    { line1:'Cantik Banget Malahan 😝💗', line2:'Lariiii~ 🏃🏃', pose:'squish', pause:2800 }
+  ];
+
+  const msg1 = document.querySelector('#msg1 span');
+  const msg2 = document.getElementById('msg2');
+  const avatar = document.getElementById('avatar');
+  const panda = document.getElementById('panda');
+  const dotsnav = document.getElementById('dotsnav');
+  const endscreen = document.getElementById('endscreen');
+
+  slides.forEach(() => dotsnav.appendChild(document.createElement('span')));
+  const navDots = dotsnav.querySelectorAll('span');
+
+  function setPose(pose){
+    avatar.classList.remove('duo','talk');
+    panda.classList.remove('squish','shy');
+    if(pose === 'duo') avatar.classList.add('duo','talk');
+    if(pose === 'squish') panda.classList.add('squish');
+    if(pose === 'shy') panda.classList.add('shy');
+  }
+
+  function playSlide(idx){
+    if(idx >= slides.length){
+      setTimeout(() => endscreen.classList.add('show'), 800);
+      return;
+    }
+    navDots.forEach((d,i) => d.classList.toggle('active', i === idx));
+    setPose(slides[idx].pose);
+    msg1.innerHTML = '';
+    msg2.innerHTML = '';
+    typeCursor(msg1, slides[idx].line1, 42, () => {
+      if(slides[idx].line2){
+        setTimeout(() => {
+          typeCursor(msg2, slides[idx].line2, 32, () => {
+            setTimeout(() => playSlide(idx + 1), slides[idx].pause);
+          });
+        }, 250);
+      } else {
+        setTimeout(() => playSlide(idx + 1), slides[idx].pause);
+      }
+    });
+  }
+
+  function startPandaSequence(){
+    setTimeout(() => playSlide(0), 300);
+  }
+
+  document.getElementById('replayBtn').addEventListener('click', () => {
+    endscreen.classList.remove('show');
+    setTimeout(() => playSlide(0), 300);
+  });
+</script>
+
+</body>
+</html>
